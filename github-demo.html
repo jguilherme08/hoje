@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-Ray Image Editor - Demo para GitHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            min-height: 600px;
+        }
+
+        .controls-panel {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: rgba(52, 152, 219, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.drag-over {
+            border-color: #27ae60;
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .upload-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .preset-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .control-value {
+            background: #3498db;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+        }
+
+        .canvas-area {
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        #canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+
+        .placeholder i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+            opacity: 0.5;
+        }
+
+        .action-buttons {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .download-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .reset-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .github-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .github-link:hover {
+            background: #000;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .preset-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .demo-info {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .demo-info h3 {
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <a href="#" class="github-link">🔗 GitHub</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🔍 X-Ray Image Editor</h1>
+            <p>Editor avançado de imagens com efeitos de transparência e revelação através de tecidos</p>
+        </div>
+
+        <div class="demo-info">
+            <h3>📸 Demo Interativo</h3>
+            <p>Faça upload de uma imagem e experimente os diferentes presets de edição. Ideal para efeitos artísticos e simulações visuais.</p>
+        </div>
+
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="upload-section">
+                    <h3>📁 Upload de Imagem</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <label for="fileInput" class="upload-btn">
+                            Selecionar Imagem
+                        </label>
+                        <input type="file" id="fileInput" accept="image/*">
+                        <p style="margin-top: 10px; font-size: 0.9rem; color: #6c757d;">
+                            Ou arraste e solte uma imagem aqui
+                        </p>
+                    </div>
+                </div>
+
+                <div class="preset-section">
+                    <h3>🎨 Presets Rápidos</h3>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="applyPreset('ultraLeve')">🩱 Ultra Leve</button>
+                        <button class="preset-btn" onclick="applyPreset('leve')">🩳 Tecido Leve</button>
+                        <button class="preset-btn" onclick="applyPreset('intermediario')">👕 Intermediário</button>
+                        <button class="preset-btn" onclick="applyPreset('pesado')">🧥 Tecido Pesado</button>
+                        <button class="preset-btn" onclick="applyPreset('texto')">📄 Texto Oculto</button>
+                        <button class="preset-btn" onclick="applyPreset('artistico')">🎭 Artístico</button>
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <h3>⚙️ Controles Manuais</h3>
+                    
+                    <div class="control-group">
+                        <div class="control-label">
+                            Brilho
+                            <span class="control-value" id="brightnessValue">0</span>
+                        </div>
+                        <input type="range" class="slider" id="brightness" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            Contraste
+                            <span class="control-value" id="contrastValue">100</span>
+                        </div>
+                        <input type="range" class="slider" id="contrast" min="0" max="300" value="100">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            Saturação
+                            <span class="control-value" id="saturationValue">100</span>
+                        </div>
+                        <input type="range" class="slider" id="saturation" min="0" max="200" value="100">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            Nitidez
+                            <span class="control-value" id="sharpnessValue">0</span>
+                        </div>
+                        <input type="range" class="slider" id="sharpness" min="-100" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            Transparência
+                            <span class="control-value" id="opacityValue">100</span>
+                        </div>
+                        <input type="range" class="slider" id="opacity" min="10" max="100" value="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-area">
+                <div class="placeholder" id="placeholder">
+                    <i>🖼️</i>
+                    <div>Faça upload de uma imagem para começar</div>
+                    <p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">
+                        Formatos suportados: JPG, PNG, GIF, WebP
+                    </p>
+                </div>
+                <canvas id="canvas"></canvas>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <div>Processando imagem...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn download-btn" id="downloadBtn" onclick="downloadImage()" disabled>
+                💾 Baixar Imagem Editada
+            </button>
+            <button class="action-btn reset-btn" onclick="resetControls()">
+                🔄 Resetar Controles
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // X-Ray Image Editor JavaScript
+        class XRayImageEditor {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.originalImage = null;
+                this.currentImageData = null;
+                
+                this.setupEventListeners();
+                this.setupDragAndDrop();
+            }
+
+            setupEventListeners() {
+                // File input
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.loadImage(e.target.files[0]);
+                    }
+                });
+
+                // Sliders
+                const sliders = ['brightness', 'contrast', 'saturation', 'sharpness', 'opacity'];
+                sliders.forEach(slider => {
+                    const element = document.getElementById(slider);
+                    element.addEventListener('input', () => {
+                        document.getElementById(slider + 'Value').textContent = element.value;
+                        this.applyFilters();
+                    });
+                });
+            }
+
+            setupDragAndDrop() {
+                const uploadArea = document.getElementById('uploadArea');
+                
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('drag-over');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('drag-over');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('drag-over');
+                    
+                    if (e.dataTransfer.files.length > 0) {
+                        this.loadImage(e.dataTransfer.files[0]);
+                    }
+                });
+            }
+
+            loadImage(file) {
+                const reader = new FileReader();
+                const loading = document.getElementById('loading');
+                loading.classList.add('active');
+
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.originalImage = img;
+                        this.setupCanvas();
+                        this.applyFilters();
+                        
+                        document.getElementById('placeholder').style.display = 'none';
+                        this.canvas.style.display = 'block';
+                        document.getElementById('downloadBtn').disabled = false;
+                        loading.classList.remove('active');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            setupCanvas() {
+                const img = this.originalImage;
+                const maxWidth = 600;
+                const maxHeight = 500;
+                
+                let { width, height } = img;
+                
+                // Maintain aspect ratio
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = (width * maxHeight) / height;
+                    height = maxHeight;
+                }
+                
+                this.canvas.width = width;
+                this.canvas.height = height;
+                
+                this.ctx.drawImage(img, 0, 0, width, height);
+                this.currentImageData = this.ctx.getImageData(0, 0, width, height);
+            }
+
+            applyFilters() {
+                if (!this.originalImage) return;
+
+                const brightness = parseInt(document.getElementById('brightness').value);
+                const contrast = parseInt(document.getElementById('contrast').value);
+                const saturation = parseInt(document.getElementById('saturation').value);
+                const opacity = parseInt(document.getElementById('opacity').value);
+
+                // Redraw original image
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.drawImage(this.originalImage, 0, 0, this.canvas.width, this.canvas.height);
+
+                // Apply CSS filters for real-time preview
+                const filters = [
+                    `brightness(${100 + brightness}%)`,
+                    `contrast(${contrast}%)`,
+                    `saturate(${saturation}%)`,
+                    `opacity(${opacity}%)`
+                ];
+
+                this.canvas.style.filter = filters.join(' ');
+            }
+        }
+
+        // Preset functions
+        function applyPreset(preset) {
+            const presets = {
+                ultraLeve: { brightness: 80, contrast: 180, saturation: 50, opacity: 85 },
+                leve: { brightness: 60, contrast: 160, saturation: 70, opacity: 90 },
+                intermediario: { brightness: 40, contrast: 140, saturation: 90, opacity: 95 },
+                pesado: { brightness: 20, contrast: 120, saturation: 110, opacity: 100 },
+                texto: { brightness: 100, contrast: 250, saturation: 0, opacity: 90 },
+                artistico: { brightness: -20, contrast: 180, saturation: 150, opacity: 80 }
+            };
+
+            const values = presets[preset];
+            if (values) {
+                Object.keys(values).forEach(key => {
+                    const element = document.getElementById(key);
+                    const valueElement = document.getElementById(key + 'Value');
+                    if (element) {
+                        element.value = values[key];
+                        valueElement.textContent = values[key];
+                    }
+                });
+                editor.applyFilters();
+            }
+        }
+
+        function resetControls() {
+            const controls = [
+                { id: 'brightness', value: 0 },
+                { id: 'contrast', value: 100 },
+                { id: 'saturation', value: 100 },
+                { id: 'sharpness', value: 0 },
+                { id: 'opacity', value: 100 }
+            ];
+
+            controls.forEach(control => {
+                const element = document.getElementById(control.id);
+                const valueElement = document.getElementById(control.id + 'Value');
+                element.value = control.value;
+                valueElement.textContent = control.value;
+            });
+
+            if (editor.originalImage) {
+                editor.applyFilters();
+            }
+        }
+
+        function downloadImage() {
+            if (!editor.originalImage) return;
+
+            // Create a temporary canvas with filters applied
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCanvas.width = editor.canvas.width;
+            tempCanvas.height = editor.canvas.height;
+            
+            // Apply the current filters to the temporary canvas
+            tempCtx.filter = editor.canvas.style.filter;
+            tempCtx.drawImage(editor.originalImage, 0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Download the image
+            const link = document.createElement('a');
+            link.download = 'xray-edited-image.png';
+            link.href = tempCanvas.toDataURL();
+            link.click();
+        }
+
+        // Initialize the editor
+        const editor = new XRayImageEditor();
+
+        // Add some demo instructions
+        console.log('🔍 X-Ray Image Editor carregado!');
+        console.log('📸 Faça upload de uma imagem para começar a editar');
+        console.log('🎨 Use os presets para efeitos rápidos');
+        console.log('⚙️ Ajuste os controles manuais para personalizar');
+    </script>
+</body>
+</html>
